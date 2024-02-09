@@ -1,0 +1,28 @@
+--- connect to EC2 instance ---
+ssh -i <key> <Public DNS>
+
+--- download and install kafka + java ---
+wget https://downloads.apache.org/kafka/3.6.1/kafka_2.13-3.6.1.tgz  
+tar -xvf kafka_2.13-3.6.1.tgz  
+sudo yum install java-1.8.0-amazon-corretto.x86_64 
+cd kafka_2.13-3.6.1
+
+--- edit inbound rules for the security group ---
+
+--- set advertised.listeners  ---
+sudo nano config/server.properties 
+advertised.listeners=PLAINTEXT://<Public DNS>:9092
+
+--- start zookeeper ---
+bin/zookeeper-server-start.sh config/zookeeper.properties
+
+--- start kafka server ---
+export KAFKA_HEAP_OPTS="-Xmx256M -Xms128M"
+bin/kafka-server-start.sh config/server.properties
+
+--- topic ---
+bin/kafka-topics.sh --create --topic mytopic1 --bootstrap-server <Public DNS>:9092 --replication-factor 1 --partitions 1
+--- producer ---
+bin/kafka-console-producer.sh --topic mytopic1 --bootstrap-server <Public DNS>:9092
+--- consumer ---
+bin/kafka-console-consumer.sh --topic mytopic1 --from-beginning --bootstrap-server <Public DNS>:9092
